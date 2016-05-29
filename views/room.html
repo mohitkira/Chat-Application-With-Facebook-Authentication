@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Chatroom | ChitChat</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        $(function(){
+            var host = '{{config.host}}';
+            var messages = io.connect(host+'/messages');
+            var roomNum = {{room_number}};
+            var userName = '{{user.fullname}}';
+            var userPic = '{{user.profilePic}}';
+
+            messages.on('connect',function(){
+                console.log("connection established with server");
+                messages.emit('joinroom',{room:roomNum,user:userName,userPic:userPic})
+            })
+
+            function sendmessageall(passedmessage){
+                messages.emit('newMessage',{
+                    room_number:roomNum,
+                    user:userName,
+                    userPic:userPic,
+                    message:passedmessage
+                })
+                updateMessageFeed(userPic,passedmessage);
+                $('#newmessage').val('');
+            }
+
+            messages.on('messagefeed',function(data){
+                var msgs = JSON.parse(data);
+                updateMessageFeed(msgs.userPic,msgs.message);
+            })
+
+            function updateMessageFeed(userPic,message){
+                var str = '<li class="media">';
+                str += ' <div class="media-body">';
+                 str += '<div class="media">';
+                 str += '<a class="pull-left" href="#">';
+                 str += ' <img class="media-object img-circle " src="' + userPic + '" />';
+                 str += '</a>';
+                 str += ' <div class="media-body" >';
+                 str += message;
+                 str += '  <br />';
+                 str += '   <hr />';
+                 str += '     </div>';
+                 str += '     </div>';
+                 str += '  </div>';
+                 str += '   </li>';
+                $(str).hide().prependTo($('#messages')).slideDown(100);
+            }
+
+            $(document).on('keyup','#newmessage', function(e){
+                if(e.which === 13 && $(this).val()!=''){
+                    var passedmessage = $(this).val();
+                    sendmessageall(passedmessage);
+                }
+            })
+
+            $(document).on('click','#pressedbyuser',function(){
+                var passedmessage =  $('#newmessage').val();
+                if(passedmessage != ''){
+                    sendmessageall(passedmessage);
+                }
+            });
+
+            messages.on('updateUsersList',function(data){
+               var userlist = JSON.parse(data);
+                $('#activeUsers').html('');
+                for(var n=0;n< userlist.length;n++){
+                    var str = '<li class="media">';
+                    str += '<div class="media-body">';
+                    str += '<div class="media">';
+                    str += '<a class="pull-left" href="#">';
+                    str += '<img class="media-object img-circle" style="max-height:40px;" src="' + userlist[n].userPic + '" />';
+                    str += '</a>';
+                    str += ' <div class="media-body" >';
+                    str += '<h5>' + userlist[n].user + ' </h5>';
+                    str += '</div></div>';
+                    str += '</div>';
+                    str += '</li>';
+                    $(str).prependTo($('#activeUsers'))
+                }
+            });
+
+            setInterval(function(){
+                messages.emit('updateList',{room:roomNum});
+            },5*1000);
+
+        })
+
+    </script>
+
+</head>
+<body>
+<div style="margin-top:1em">
+<div class="container">
+<div class="row">
+<div class="col-sm-12 col-xs-12">
+  <div class="panel panel-default">
+  <div class="panel-heading" style="text-align:center"><img src="../img/chitchat.png"></div>
+  <div class="panel-body">
+  <div class="row"> 
+  <div class="col-sm-12 col-xs-12" style="background-color:#C3E7F0"><img src="{{user.profilePic}}" width="50px" height="50px">&nbsp; {{user.fullname}}&nbsp;|&nbsp;<a href="/logout">Logout</a>&nbsp;|&nbsp; <a href="/chatrooms"> More Chatrooms</a></div>
+  </div>
+  
+  <br>
+<div class="row ">
+    <div class="col-md-8">
+        <div class="panel panel-info">
+            <div class="panel-heading" style="font-size: large;font-weight: bold;">
+                {{room_name}}
+            </div>
+            <div class="panel-body">
+<ul class="media-list" id="messages" name="messages">
+
+                                    <!--<li class="media">-->
+
+                                        <!--<div class="media-body">-->
+
+                                            <!--<div class="media">-->
+                                                <!--<a class="pull-left" href="#">-->
+                                                    <!--<img class="media-object img-circle " src="assets/img/user.png" />-->
+                                                <!--</a>-->
+                                                <!--<div class="media-body" >-->
+                                                    <!--Donec sit amet ligula enim. Duis vel condimentum massa.-->
+              <!---->
+              <!--Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. -->
+                                                    <!--Duis vel condimentum massa.-->
+                                                    <!--Donec sit amet ligula enim. Duis vel condimentum massa.-->
+                                                    <!--<br />-->
+                                                   <!--<small class="text-muted">Alex Deo | 23rd June at 5:00pm</small>-->
+                                                    <!--<hr />-->
+                                                <!--</div>-->
+                                            <!--</div>-->
+
+                                        <!--</div>-->
+                                    <!--</li>-->
+                                </ul>
+            </div>
+            <div class="panel-footer">
+                <div class="input-group">
+                                    <input type="text" id="newmessage" name="newmessage" class="form-control" placeholder="Enter Message" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-info" id="pressedbyuser" name="pressedbyuser" type="button">SEND</button>
+                                    </span>
+                                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+                USERS
+            </div>
+            <div class="panel-body">
+                <ul class="media-list" id="activeUsers" name="activeUsers">
+
+                                    <!--<li class="media">-->
+
+                                        <!--<div class="media-body">-->
+
+                                            <!--<div class="media">-->
+                                                <!--<a class="pull-left" href="#">-->
+                                                    <!--<img class="media-object img-circle" style="max-height:40px;" src="assets/img/user.png" />-->
+                                                <!--</a>-->
+                                                <!--<div class="media-body" >-->
+                                                    <!--<h5>Alex Deo | User </h5>-->
+                                                    <!---->
+                                                   <!--<small class="text-muted">Active From 3 hours</small>-->
+                                                <!--</div>-->
+                                            <!--</div>-->
+
+                                        <!--</div>-->
+                                    <!--</li>-->
+                                </ul>
+                </div>
+            </div>
+        
+    </div>
+</div>
+ 
+ 
+ </div>
+  <div class="panel-footer">Created By <a href="https://www.linkedin.com/in/mohithamgaonkar">Mohit Amgaonkar</a></div>
+  </div>
+  
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

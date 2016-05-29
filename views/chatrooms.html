@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Chatroom | ChitChat</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    $(function(){
+        var host = '{{config.host}}';
+        var socket = io.connect(host + '/roomlist');
+
+        socket.on('connect',function(){
+          console.log("connection established ")
+        })
+
+        function createRooms(){
+            //Get
+            var room_name = $('#newRoom').val();
+
+            if(room_name!=''){
+                var room_number = parseInt(Math.random()*10000);
+                socket.emit('newroom',{room_name:room_name,room_number:room_number});
+                //Set
+                $('#newRoom').val('');
+            }
+        }
+
+        $('#newRoom').keydown(function(e) {
+            if (e.keyCode == 13) {
+                createRooms();
+            }
+        });
+
+        $(document).on('click','#create',function(){
+            createRooms();
+        });
+
+        socket.on('roomupdate',function(data){
+            var procData = JSON.parse(data);
+          $('#roomlist').html('');
+            for(var i=0;i<procData.length;i++){
+                var str = '<a href="room/'+procData[i].room_number+'" class="list-group-item">'+procData[i].room_name+'</a>';
+                $('#roomlist').prepend(str);
+            }
+        })
+    })
+
+  </script>
+</head>
+<body>
+<div style="margin-top:6em">
+<div class="container">
+<div class="row">
+<div  class="col-sm-4 col-xs-2">&nbsp;</div>
+<div class="col-sm-4 col-xs-8">
+  <div class="panel panel-default">
+  <div class="panel-heading" style="text-align:center"><img src="../img/chitchat.png"></div>
+  <div class="panel-body">
+  <div class="row"> 
+  <div class="col-sm-11 col-xs-11"><img src="{{user.profilePic}}" width="50px" height="50px">&nbsp; {{user.fullname}}&nbsp;|&nbsp;<a href="/logout">Logout</a></div>
+  <div class="col-sm-1 col-xs-1">&nbsp;</div>
+  </div>
+  <div class="row"> 
+  <div class="col-sm-6 col-xs-6">
+  <div class="form-group">
+  <input type="text" class="form-control" id="newRoom" name="newRoom" autocomplete="off">
+</div>
+</div>
+<div class="col-sm-2 col-xs-2"> <button type="button" class="btn btn-primary btn-md" id="create">Create Room</button></div>
+  </div>
+  <div class="list-group" id="roomlist">
+  </div>
+ </div>
+  <div class="panel-footer">Created By <a href="https://www.linkedin.com/in/mohithamgaonkar">Mohit Amgaonkar</a></div>
+  </div>
+  <div  class="col-sm-4 col-xs-2"></div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

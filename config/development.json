@@ -1,0 +1,10 @@
+{
+  "dbURL":"mongodb://mohitkira:mohit12345@ds011459.mlab.com:11459/chitchat",
+  "sessionSecret":"itachiwasagudguy786",
+  "fb":{
+      "appID":"1709074852643811",
+      "appSecret":"915765f8533f6b4d02c2c1b2a5703def",
+      "callbackURL":"http://localhost:3003/auth/facebook/callback"
+  },
+  "host":"http://localhost:3003"
+}
